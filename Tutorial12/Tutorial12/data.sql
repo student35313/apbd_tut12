@@ -68,5 +68,27 @@ ALTER TABLE Client_Trip ADD CONSTRAINT Table_5_Trip
     FOREIGN KEY (IdTrip)
         REFERENCES Trip (IdTrip);
 
--- End of file.
+
+INSERT INTO Client (FirstName, LastName, Email, Telephone, Pesel) VALUES
+                                                                      ('John', 'Doe', 'john.doe@example.com', '123456789', '12345678901'),
+                                                                      ('Jane', 'Smith', 'jane.smith@example.com', '987654321', '98765432109'),
+                                                                      ('Alice', 'Johnson', 'alice.johnson@example.com', '555555555', '55555555555');
+INSERT INTO Country (Name) VALUES
+                               ('Poland'),
+                               ('Germany'),
+                               ('France');
+INSERT INTO Trip (Name, Description, DateFrom, DateTo, MaxPeople) VALUES
+                                                                      ('Trip to Warsaw', 'Visiting beautiful Warsaw', '2026-06-10', '2026-06-15', 20),
+                                                                      ('Trip to Berlin', 'Exploring historical Berlin', '2026-07-01', '2026-07-05', 15),
+                                                                      ('Trip to Paris', 'Romantic getaway in Paris', '2024-08-12', '2024-08-18', 25);
+INSERT INTO Country_Trip (IdCountry, IdTrip) VALUES
+                                                 (1, 1),
+                                                 (2, 2),
+                                                 (3, 3),
+                                                 (1, 2),
+                                                 (2, 3);
+INSERT INTO Client_Trip (IdClient, IdTrip, RegisteredAt, PaymentDate) VALUES
+                                                                          (1, 1, GETDATE(), GETDATE()),
+                                                                          (2, 2, GETDATE(), NULL),
+                                                                          (3, 3, GETDATE(), GETDATE());
 

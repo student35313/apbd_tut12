@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Tutorial12.Data;
+using Tutorial12.Services;
+
+// using Tutorial12.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +16,7 @@ builder.Services.AddDbContext<MasterContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default"))
 );
 
-//builder.Services.AddScoped<IDbService, DbService>();
+builder.Services.AddScoped<IDBService, DBService>();
 
 var app = builder.Build();
 
@@ -23,3 +26,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
