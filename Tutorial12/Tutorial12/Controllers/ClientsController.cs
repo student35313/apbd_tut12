@@ -21,7 +21,7 @@ public class ClientsController : ControllerBase
         try
         {
             await _dbService.DeleteClientAsync(idClient);
-            return NoContent();
+            return Ok("Client deleted successfully.");
         }
         catch (NotFoundException ex)
         {
@@ -30,6 +30,12 @@ public class ClientsController : ControllerBase
         catch (ConflictException ex)
         {
             return Conflict(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { error = "Internal server error" });
         }
     }
 }

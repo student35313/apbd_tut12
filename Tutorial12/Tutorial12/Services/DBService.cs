@@ -18,7 +18,8 @@ public class DBService : IDBService
     
     public async Task<TripResponseDTO> GetTripsAsync(int page, int pageSize)
     {
-        if (page < 1) throw new BadHttpRequestException("Page must be greater than 0");
+        if (page < 1) throw new BadHttpRequestException("Page number must be greater than 0");
+        if (pageSize < 1) throw new BadHttpRequestException("Page Size must be greater than 0");
         
         var totalTrips = await _context.Trips.CountAsync();
     
@@ -75,44 +76,55 @@ public class DBService : IDBService
     
     public async Task RegisterClientToTripAsync(int idTrip, RegisterClientToTripDTO dto)
     {
-        var trip = await _context.Trips.FirstOrDefaultAsync(t => t.IdTrip == idTrip);
+        await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        if (trip is null)
-            throw new NotFoundException("Trip not found.");
-
-        if (trip.DateFrom <= DateTime.Now)
-            throw new ConflictException("This trip has already started. You cannot register for it.");
-
-        var client = await _context.Clients.FirstOrDefaultAsync(c => c.Pesel == dto.Pesel);
-
-        if (client is null)
+        try
         {
-            client = new Client
+            var trip = await _context.Trips.FirstOrDefaultAsync(t => t.IdTrip == idTrip);
+
+            if (trip is null)
+                throw new NotFoundException("Trip not found.");
+
+            if (trip.DateFrom <= DateTime.Now)
+                throw new ConflictException("This trip has already started. You cannot register for it.");
+
+            var client = await _context.Clients.FirstOrDefaultAsync(c => c.Pesel == dto.Pesel);
+
+            if (client is null)
             {
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Email = dto.Email,
-                Telephone = dto.Telephone,
-                Pesel = dto.Pesel
+                client = new Client
+                {
+                    FirstName = dto.FirstName,
+                    LastName = dto.LastName,
+                    Email = dto.Email,
+                    Telephone = dto.Telephone,
+                    Pesel = dto.Pesel
+                };
+                _context.Clients.Add(client);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new BadHttpRequestException("Client already exists.");
+            }
+
+            var clientTrip = new ClientTrip
+            {
+                IdClient = client.IdClient,
+                IdTrip = trip.IdTrip,
+                RegisteredAt = DateTime.Now,
+                PaymentDate = dto.PaymentDate
             };
-            _context.Clients.Add(client);
+
+            _context.ClientTrips.Add(clientTrip);
             await _context.SaveChangesAsync();
-        }
-        else
-        {
-            throw new BadHttpRequestException("Client already exists.");
-        }
 
-        
-        var clientTrip = new ClientTrip
+            await transaction.CommitAsync();
+        }
+        catch
         {
-            IdClient = client.IdClient,
-            IdTrip = trip.IdTrip,
-            RegisteredAt = DateTime.Now,
-            PaymentDate = dto.PaymentDate
-        };
-
-        _context.ClientTrips.Add(clientTrip);
-        await _context.SaveChangesAsync();
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 }

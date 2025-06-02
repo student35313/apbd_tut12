@@ -42,7 +42,7 @@ public class TripsController : ControllerBase
         try
         {
             await _dbService.RegisterClientToTripAsync(idTrip, dto);
-            return Ok("Client registered successfully.");
+            return Created("","Client registered successfully.");
         }
         catch (NotFoundException ex)
         {
